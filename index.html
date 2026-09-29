@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Rujukan Pesakit Gigitan Haiwan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        
+        /* Custom Scrollbar for aesthetic */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased h-screen flex overflow-hidden">
+
+    <div id="app-dashboard" class="flex h-full w-full">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex transition-all duration-300">
+            <div class="p-6 flex items-center justify-center border-b border-slate-700">
+                <i class="fas fa-paw text-red-500 text-3xl mr-3"></i>
+                <h2 class="text-lg font-bold leading-tight">RUJUKAN PESAKIT<br><span class="text-red-400">GIGITAN HAIWAN</span></h2>
+            </div>
+            <nav class="flex-1 px-4 py-6 space-y-2">
+                <a href="#" class="flex items-center px-4 py-3 bg-blue-600 text-white rounded-lg shadow-md transition-colors">
+                    <i class="fas fa-home mr-3 w-5"></i>
+                    <span class="font-medium">Papan Pemuka</span>
+                </a>
+                <a href="#" id="menu-tambah" onclick="bukaModalTambah()" class="flex items-center px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition-colors">
+                    <i class="fas fa-plus-circle mr-3 w-5"></i>
+                    <span class="font-medium">Daftar Kes Baru</span>
+                </a>
+            </nav>
+            <div class="p-4 text-xs text-slate-500 text-center border-t border-slate-700">
+                &copy; 2026 KKM (Mockup)
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+            <!-- Topbar -->
+            <header class="bg-white shadow-sm z-10 px-6 py-4 flex justify-between items-center">
+                <div class="flex items-center md:hidden">
+                    <i class="fas fa-paw text-red-500 text-2xl mr-2"></i>
+                    <div class="flex flex-col">
+                        <h2 class="text-md font-bold leading-tight">Rujukan Gigitan Haiwan</h2>
+                        <span class="text-[10px] text-blue-700 font-bold mt-0.5">PKD KUBANG PASU</span>
+                    </div>
+                </div>
+                <div class="hidden md:flex flex-col">
+                    <h1 class="text-2xl font-bold text-gray-800 leading-tight">Senarai Rujukan Pesakit</h1>
+                    <p class="text-xs font-bold text-blue-700 tracking-wide mt-1">BILIK GERAKAN, PEJABAT KESIHATAN DAERAH KUBANG PASU</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Penukar Peranan (Role Switcher) -->
+                    <div class="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200 hidden md:flex">
+                        <button id="btn-role-admin" onclick="tukarPeranan('admin')" class="px-3 py-1.5 text-sm font-medium rounded shadow-sm bg-white text-blue-600 transition-all">Mod Admin</button>
+                        <button id="btn-role-klinik" onclick="tukarPeranan('klinik')" class="px-3 py-1.5 text-sm font-medium rounded text-gray-500 hover:text-gray-800 transition-all">Mod Klinik</button>
+                    </div>
+
+                    <button id="btn-tambah-header" onclick="bukaModalTambah()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow transition-colors flex items-center">
+                        <i class="fas fa-plus mr-2"></i> Tambah Pesakit
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="flex-1 overflow-y-auto p-6 bg-gray-50">
+                
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-4">
+                            <i class="fas fa-users text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Jumlah Kes</p>
+                            <h3 class="text-2xl font-bold text-gray-800" id="stat-total">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center">
+                        <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 mr-4">
+                            <i class="fas fa-exclamation-triangle text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Kategori 3 (Kritikal)</p>
+                            <h3 class="text-2xl font-bold text-gray-800" id="stat-kat3">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center">
+                        <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-4">
+                            <i class="fas fa-clinic-medical text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Rujukan Selesai</p>
+                            <h3 class="text-2xl font-bold text-gray-800" id="stat-rujukan">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Section -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <h3 class="font-bold text-lg text-gray-800">Rekod Pesakit</h3>
+                        
+                        <!-- Filter Clinic -->
+                        <div class="w-full sm:w-auto flex items-center">
+                            <label for="filter-klinik" class="text-sm text-gray-500 mr-3 whitespace-nowrap">Lihat dari:</label>
+                            <select id="filter-klinik" onchange="renderTable()" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full sm:w-64 p-2.5">
+                                <option value="Semua">Semua Klinik Kesihatan</option>
+                                <option value="Klinik Kesihatan Jitra">Klinik Kesihatan Jitra</option>
+                                <option value="Klinik Kesihatan Kepala Batas">Klinik Kesihatan Kepala Batas</option>
+                                <option value="Klinik Kesihatan Banai">Klinik Kesihatan Banai</option>
+                                <option value="Klinik Kesihatan Napoh">Klinik Kesihatan Napoh</option>
+                                <option value="Klinik Kesihatan Changlun">Klinik Kesihatan Changlun</option>
+                                <option value="Klinik Kesihatan Laka Temin">Klinik Kesihatan Laka Temin</option>
+                                <option value="Klinik Kesihatan Ayer Hitam">Klinik Kesihatan Ayer Hitam</option>
+                                <option value="Klinik Kesihatan Kodiang">Klinik Kesihatan Kodiang</option>
+                                <option value="Klinik Kesihatan Tunjang">Klinik Kesihatan Tunjang</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                                <tr>
+                                    <th scope="col" class="px-6 py-4">Nama Pesakit / No. KP</th>
+                                    <th scope="col" class="px-6 py-4">No. Telefon</th>
+                                    <th scope="col" class="px-6 py-4">Alamat</th>
+                                    <th scope="col" class="px-6 py-4">Maklumat Insiden</th>
+                                    <th scope="col" class="px-6 py-4">Klinik Rujukan / Tarikh</th>
+                                    <th scope="col" class="px-6 py-4 text-center">Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                                <!-- Data akan dijana oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Empty State -->
+                    <div id="empty-state" class="hidden flex-col items-center justify-center p-12 text-gray-500">
+                        <i class="fas fa-folder-open text-4xl mb-3 text-gray-300"></i>
+                        <p>Tiada rekod pesakit dijumpai.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Tambah Pesakit -->
+    <div id="modal-tambah" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
+            <div class="flex justify-between items-center p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
+                <h3 id="modal-title" class="text-xl font-bold text-gray-800">Borang Pendaftaran Kes Baru</h3>
+                <button type="button" onclick="tutupModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="form-pesakit" onsubmit="handleFormSubmit(event)" class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- NAMA -->
+                    <div class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-900">Nama Pesakit</label>
+                        <input type="text" id="input-nama" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Contoh: Ahmad Bin Abu">
+                    </div>
+                    
+                    <!-- NO KP -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900">No Kad Pengenalan</label>
+                        <input type="text" id="input-kp" required pattern="\d{6}-\d{2}-\d{4}" title="Format: 900101-02-1234" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="XXXXXX-XX-XXXX">
+                    </div>
+                    
+                    <!-- TELEFON -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900">No. Telefon</label>
+                        <input type="text" id="input-telefon" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="01X-XXXXXXX">
+                    </div>
+
+                    <!-- ALAMAT (OPTIONAL) -->
+                    <div class="md:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-900">Alamat (Pilihan)</label>
+                        <textarea id="input-alamat" rows="2" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Alamat rumah pesakit..."></textarea>
+                    </div>
+
+                    <!-- TARIKH GIGITAN -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900">Tarikh Gigitan</label>
+                        <input type="date" id="input-tarikh-gigit" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed">
+                    </div>
+
+                    <!-- KATEGORI LUKA -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900">Kategori Luka (Garis Panduan KKM)</label>
+                        <select id="input-kategori" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed">
+                            <option value="">-- Pilih Kategori --</option>
+                            <option value="Kategori 1">Kategori 1 (Menyentuh, dijilat di kulit utuh)</option>
+                            <option value="Kategori 2">Kategori 2 (Gigitan kecil, calar tanpa darah)</option>
+                            <option value="Kategori 3">Kategori 3 (Luka tembus kulit, gigitan kelawar dll)</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-span-2 border-t pt-4 mt-2 border-gray-100">
+                        <h4 class="font-semibold text-gray-700 mb-4">Maklumat Rujukan</h4>
+                    </div>
+
+                    <!-- KLINIK RUJUKAN -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900">Rujuk Ke Klinik Kesihatan</label>
+                        <select id="input-klinik" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed">
+                            <option value="">-- Pilih Klinik --</option>
+                            <option value="Klinik Kesihatan Jitra">Klinik Kesihatan Jitra</option>
+                            <option value="Klinik Kesihatan Kepala Batas">Klinik Kesihatan Kepala Batas</option>
+                            <option value="Klinik Kesihatan Banai">Klinik Kesihatan Banai</option>
+                            <option value="Klinik Kesihatan Napoh">Klinik Kesihatan Napoh</option>
+                            <option value="Klinik Kesihatan Changlun">Klinik Kesihatan Changlun</option>
+                            <option value="Klinik Kesihatan Laka Temin">Klinik Kesihatan Laka Temin</option>
+                            <option value="Klinik Kesihatan Ayer Hitam">Klinik Kesihatan Ayer Hitam</option>
+                            <option value="Klinik Kesihatan Kodiang">Klinik Kesihatan Kodiang</option>
+                            <option value="Klinik Kesihatan Tunjang">Klinik Kesihatan Tunjang</option>
+                        </select>
+                    </div>
+
+                    <!-- TARIKH RUJUKAN -->
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900">Tarikh Rujukan</label>
+                        <input type="date" id="input-tarikh-rujuk" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed">
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end space-x-3">
+                    <button type="button" onclick="tutupModal()" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-gray-200">
+                        Batal
+                    </button>
+                    <button type="submit" id="btn-simpan" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300">
+                        Simpan Rekod
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Pengesahan Padam -->
+    <div id="modal-padam" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md m-4 p-6 text-center transform transition-all">
+            <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-exclamation-triangle text-3xl text-red-600"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Sahkan Padam Rekod</h3>
+            <p class="text-gray-500 mb-6">Adakah anda pasti untuk memadam rekod pesakit ini? Tindakan ini tidak boleh dibatalkan.</p>
+            <div class="flex justify-center space-x-3">
+                <button type="button" onclick="tutupModalPadam()" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-gray-200 transition-colors">
+                    Batal
+                </button>
+                <button type="button" onclick="sahkanPadam()" class="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 transition-colors">
+                    Ya, Padam Rekod
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Log Masuk Admin -->
+    <div id="modal-login" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm m-4 overflow-hidden transform transition-all">
+            <div class="bg-slate-900 p-6 text-center border-b border-slate-800">
+                <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-user-shield text-2xl text-blue-400"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">Log Masuk Admin</h3>
+                <p class="text-slate-400 text-sm mt-1">Sila sahkan identiti anda</p>
+            </div>
+            
+            <form id="form-login" onsubmit="handleLogin(event)" class="p-6 bg-white">
+                <!-- Ralat Log Masuk -->
+                <div id="login-error" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg flex items-center">
+                    <i class="fas fa-exclamation-circle mr-2"></i> ID Pengguna atau Kata Laluan salah.
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium text-gray-900">ID Pengguna</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i class="fas fa-user text-gray-400"></i>
+                        </div>
+                        <input type="text" id="input-userid" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5" placeholder="Masukkan ID">
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block mb-2 text-sm font-medium text-gray-900">Kata Laluan</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" id="input-password" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5" placeholder="••••••••">
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="tutupModalLogin()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-gray-200">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300">
+                        Log Masuk
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, collection, onSnapshot, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Tetapan Sistem
+        let app, db, auth, pesakitRef;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'rujukan-gigitan-haiwan';
+        
+        try {
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            pesakitRef = collection(db, 'artifacts', appId, 'public', 'data', 'pesakit');
+        } catch (e) {
+            console.error("Ralat pangkalan data:", e);
+        }
+
+        let currentEditId = null;
+        let idUntukDipadam = null;
+        let perananSemasa = 'klinik'; 
+        let pesakitData = []; // Data kini kosong, akan dimuat turun secara LIVE
+
+        // Dedahkan fungsi kepada persekitaran global HTML
+        window.tukarPeranan = tukarPeranan;
+        window.bukaModalLogin = bukaModalLogin;
+        window.tutupModalLogin = tutupModalLogin;
+        window.handleLogin = handleLogin;
+        window.renderTable = renderTable;
+        window.handleFormSubmit = handleFormSubmit;
+        window.bukaModalTambah = bukaModalTambah;
+        window.tutupModal = tutupModal;
+        window.editPesakit = editPesakit;
+        window.sahkanHadir = sahkanHadir;
+        window.bukaModalPadam = bukaModalPadam;
+        window.tutupModalPadam = tutupModalPadam;
+        window.sahkanPadam = sahkanPadam;
+
+        // --- KONFIGURASI GOOGLE SHEETS ---
+        // Masukkan URL Web App Google Apps Script anda di bawah ini selepas anda membinanya:
+        const GOOGLE_SHEETS_WEBHOOK_URL = "https://script.google.com/macros/library/d/1IXlJgkut8YGSqBWR9VWFDacs-06hVUo3bex-EN6sYx9zFrvSn1Klxd3e/2";
+        
+        async function syncKeGoogleSheets(action, data) {
+            if(GOOGLE_SHEETS_WEBHOOK_URL === "LETAK_URL_GOOGLE_APPS_SCRIPT_ANDA_DI_SINI" || !GOOGLE_SHEETS_WEBHOOK_URL) {
+                console.log("Penyelarasan Google Sheets diabaikan: URL Webhook belum dimasukkan.");
+                return;
+            }
+            try {
+                await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Mengelakkan halangan keselamatan CORS web
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: action, data: data })
+                });
+                console.log("Data berjaya diselaraskan ke Google Sheets.");
+            } catch (error) {
+                console.error("Ralat menghantar data ke Google Sheets:", error);
+            }
+        }
+
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                if (auth.currentUser) {
+                    // Dengar perubahan data secara masa nyata (LIVE)
+                    onSnapshot(pesakitRef, (snapshot) => {
+                        pesakitData = [];
+                        snapshot.forEach((doc) => {
+                            pesakitData.push({ id: doc.id, ...doc.data() });
+                        });
+                        renderTable(); // Sentiasa muat semula jadual jika ada rekod baharu masuk
+                    }, (error) => {
+                        console.error("Ralat memuat turun data secara live:", error);
+                    });
+                }
+            } catch (error) {
+                console.error("Ralat akses keselamatan awan:", error);
+            }
+        }
+
+        // Format Date to DD/MM/YYYY
+        function formatDate(dateString) {
+            if(!dateString) return "-";
+            const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-GB', options);
+        }
+
+        // Semak tindakan tukar peranan
+        function tukarPeranan(peranan) {
+            if (peranan === 'admin' && perananSemasa !== 'admin') {
+                bukaModalLogin();
+            } else if (peranan === 'klinik' && perananSemasa !== 'klinik') {
+                laksanaTukarPeranan('klinik');
+                tunjukNotifikasi("Berubah ke Mod Klinik (Paparan Sahaja)", "fas fa-info-circle", "bg-gray-800");
+            }
+        }
+
+        // Laksana Pertukaran UI Peranan
+        function laksanaTukarPeranan(peranan) {
+            perananSemasa = peranan;
+            
+            const btnAdmin = document.getElementById('btn-role-admin');
+            const btnKlinik = document.getElementById('btn-role-klinik');
+            const btnTambahHeader = document.getElementById('btn-tambah-header');
+            const menuTambah = document.getElementById('menu-tambah');
+
+            if (peranan === 'admin') {
+                btnAdmin.className = "px-3 py-1.5 text-sm font-medium rounded shadow-sm bg-white text-blue-600 transition-all";
+                btnKlinik.className = "px-3 py-1.5 text-sm font-medium rounded text-gray-500 hover:text-gray-800 transition-all";
+                
+                btnTambahHeader.classList.remove('hidden');
+                btnTambahHeader.classList.add('flex');
+                menuTambah.classList.remove('hidden');
+                menuTambah.classList.add('flex');
+            } else {
+                btnKlinik.className = "px-3 py-1.5 text-sm font-medium rounded shadow-sm bg-white text-blue-600 transition-all";
+                btnAdmin.className = "px-3 py-1.5 text-sm font-medium rounded text-gray-500 hover:text-gray-800 transition-all";
+                
+                btnTambahHeader.classList.add('hidden');
+                btnTambahHeader.classList.remove('flex');
+                menuTambah.classList.add('hidden');
+                menuTambah.classList.remove('flex');
+            }
+
+            renderTable();
+        }
+
+        // Pengurusan Modal Log Masuk
+        function bukaModalLogin() {
+            document.getElementById('form-login').reset();
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('modal-login').classList.remove('hidden');
+            setTimeout(() => document.getElementById('input-userid').focus(), 100);
+        }
+
+        function tutupModalLogin() {
+            document.getElementById('modal-login').classList.add('hidden');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const id = document.getElementById('input-userid').value;
+            const pass = document.getElementById('input-password').value;
+
+            if (id === 'admin' && pass === 'admin123') {
+                tutupModalLogin();
+                laksanaTukarPeranan('admin');
+                tunjukNotifikasi("Log Masuk Berjaya! Akses Admin Diberikan.", "fas fa-unlock-alt", "bg-green-500");
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+                document.getElementById('input-password').value = '';
+                document.getElementById('input-password').focus();
+            }
+        }
+
+        // Render Table Data
+        function renderTable() {
+            const tableBody = document.getElementById('table-body');
+            const emptyState = document.getElementById('empty-state');
+            const filterValue = document.getElementById('filter-klinik').value;
+            
+            // Filter Data based on selection
+            let filteredData = pesakitData;
+            if (filterValue !== 'Semua') {
+                filteredData = pesakitData.filter(item => item.klinikRujukan === filterValue);
+            }
+
+            // Update Stats
+            document.getElementById('stat-total').innerText = pesakitData.length;
+            document.getElementById('stat-kat3').innerText = pesakitData.filter(p => p.kategoriLuka === 'Kategori 3').length;
+            document.getElementById('stat-rujukan').innerText = pesakitData.length;
+
+            tableBody.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                tableBody.parentElement.classList.add('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+                tableBody.parentElement.classList.remove('hidden');
+
+                // Susun ikut tarikh rujukan terbaru
+                filteredData.sort((a,b) => {
+                    let dateA = a.timestamp || 0;
+                    let dateB = b.timestamp || 0;
+                    return dateB - dateA;
+                }).forEach((pesakit) => {
+                    
+                    let badgeClass = "bg-gray-100 text-gray-800";
+                    if(pesakit.kategoriLuka && pesakit.kategoriLuka.includes("Kategori 1")) badgeClass = "bg-green-100 text-green-800";
+                    if(pesakit.kategoriLuka && pesakit.kategoriLuka.includes("Kategori 2")) badgeClass = "bg-yellow-100 text-yellow-800";
+                    if(pesakit.kategoriLuka && pesakit.kategoriLuka.includes("Kategori 3")) badgeClass = "bg-red-100 text-red-800";
+
+                    const tr = document.createElement('tr');
+                    tr.className = "bg-white border-b hover:bg-slate-50 transition-colors";
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                            <div class="font-bold text-sm">${pesakit.nama}</div>
+                            <div class="text-xs text-gray-500"><i class="far fa-id-card mr-1"></i>${pesakit.kp}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm"><i class="fas fa-phone-alt text-gray-400 mr-2"></i>${pesakit.telefon}</div>
+                        </td>
+                        <td class="px-6 py-4 min-w-[200px]">
+                            <div class="text-sm text-gray-600">${pesakit.alamat ? pesakit.alamat : '<span class="text-gray-400 italic">Tiada alamat direkodkan</span>'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="mb-1"><span class="text-xs text-gray-500">T. Gigitan:</span> ${formatDate(pesakit.tarikhGigitan)}</div>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeClass}">${pesakit.kategoriLuka}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium text-blue-700"><i class="fas fa-hospital text-blue-400 mr-1"></i> ${pesakit.klinikRujukan}</div>
+                            <div class="text-xs text-gray-500 mt-1">Rujuk: ${formatDate(pesakit.tarikhRujukan)}</div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex flex-col space-y-2">
+                                ${pesakit.hadir 
+                                    ? `<div class="flex flex-col">
+                                        <span class="text-white bg-emerald-500 font-medium rounded-lg text-xs px-3 py-1.5 text-center inline-flex items-center justify-center cursor-not-allowed opacity-90" title="Pesakit telah disahkan hadir">
+                                            <i class="fas fa-check-double mr-1"></i> Telah Hadir
+                                        </span>
+                                        ${pesakit.waktuKehadiran ? `<span class="text-[10px] text-emerald-700 font-semibold mt-1.5 bg-emerald-50 rounded py-0.5 border border-emerald-100 flex items-center justify-center whitespace-nowrap" title="Waktu Pengesahan"><i class="far fa-clock mr-1"></i>${pesakit.waktuKehadiran}</span>` : ''}
+                                       </div>`
+                                    : `<button onclick="sahkanHadir('${pesakit.id}')" class="text-white bg-indigo-500 hover:bg-indigo-600 focus:ring-2 focus:outline-none focus:ring-indigo-300 font-medium rounded-lg text-xs px-3 py-1.5 text-center inline-flex items-center justify-center transition-colors" title="Klik untuk sahkan kehadiran">
+                                        <i class="fas fa-user-check mr-1"></i> Sahkan Hadir
+                                       </button>`
+                                }
+                                
+                                ${perananSemasa === 'admin' ? `
+                                <button onclick="editPesakit('${pesakit.id}')" class="text-white bg-amber-500 hover:bg-amber-600 focus:ring-2 focus:outline-none focus:ring-amber-300 font-medium rounded-lg text-xs px-3 py-1.5 text-center inline-flex items-center justify-center transition-colors">
+                                    <i class="fas fa-edit mr-1"></i> Edit Rekod
+                                </button>
+                                <button onclick="bukaModalPadam('${pesakit.id}')" class="text-white bg-red-500 hover:bg-red-600 focus:ring-2 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-3 py-1.5 text-center inline-flex items-center justify-center transition-colors">
+                                    <i class="fas fa-trash-alt mr-1"></i> Padam
+                                </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            }
+        }
+
+        // Menambah atau mengemaskini maklumat ke Storan Awan (Firestore)
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            // Tukar butang jadi mod "Sedang Menyimpan"
+            const btnSimpan = document.getElementById('btn-simpan');
+            const teksAsal = btnSimpan.innerText;
+            btnSimpan.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...';
+            btnSimpan.disabled = true;
+
+            const formData = {
+                nama: document.getElementById('input-nama').value,
+                kp: document.getElementById('input-kp').value,
+                telefon: document.getElementById('input-telefon').value,
+                alamat: document.getElementById('input-alamat').value,
+                tarikhGigitan: document.getElementById('input-tarikh-gigit').value,
+                kategoriLuka: document.getElementById('input-kategori').value,
+                klinikRujukan: document.getElementById('input-klinik').value,
+                tarikhRujukan: document.getElementById('input-tarikh-rujuk').value
+            };
+
+            try {
+                if(currentEditId) {
+                    // Update existing record di Cloud
+                    const docRujukan = doc(db, 'artifacts', appId, 'public', 'data', 'pesakit', currentEditId);
+                    await updateDoc(docRujukan, formData);
+                    
+                    formData.id = currentEditId;
+                    syncKeGoogleSheets("KEMASKINI", formData); // Selaras ke Google Sheets
+                    
+                    tunjukNotifikasi("Rekod berjaya dikemaskini!", "fas fa-check-circle", "bg-green-500");
+                } else {
+                    // Add new record di Cloud
+                    formData.hadir = false;
+                    formData.timestamp = new Date().getTime(); // Rekod masa dicipta
+                    const newDocRef = await addDoc(pesakitRef, formData);
+                    
+                    formData.id = newDocRef.id;
+                    syncKeGoogleSheets("TAMBAH", formData); // Selaras ke Google Sheets
+                    
+                    tunjukNotifikasi("Rekod baharu berjaya disimpan!", "fas fa-check-circle", "bg-green-500");
+                }
+            } catch (err) {
+                console.error("Gagal simpan rekod:", err);
+                tunjukNotifikasi("Gagal menyimpan rekod. Sila cuba lagi.", "fas fa-exclamation-triangle", "bg-red-500");
+            } finally {
+                btnSimpan.innerText = teksAsal;
+                btnSimpan.disabled = false;
+                tutupModal();
+            }
+        }
+
+        // Buka Modal untuk Tambah Baru
+        function bukaModalTambah() {
+            currentEditId = null;
+            document.getElementById('form-pesakit').reset();
+            
+            document.getElementById('input-tarikh-gigit').disabled = false;
+            document.getElementById('input-kategori').disabled = false;
+            document.getElementById('input-klinik').disabled = false;
+            document.getElementById('input-tarikh-rujuk').disabled = false;
+            
+            document.getElementById('modal-title').innerText = "Borang Pendaftaran Kes Baru";
+            document.getElementById('btn-simpan').innerText = "Simpan Rekod";
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('input-tarikh-rujuk').value = today;
+            
+            document.getElementById('modal-tambah').classList.remove('hidden');
+        }
+
+        function tutupModal() {
+            document.getElementById('modal-tambah').classList.add('hidden');
+            currentEditId = null;
+        }
+
+        // Edit Rekod
+        function editPesakit(id) {
+            const pesakit = pesakitData.find(p => p.id === id);
+            if(!pesakit) return;
+
+            currentEditId = id;
+            document.getElementById('modal-title').innerText = "Kemaskini Rekod Pesakit";
+            document.getElementById('btn-simpan').innerText = "Simpan Kemaskini";
+
+            // Populate form
+            document.getElementById('input-nama').value = pesakit.nama || '';
+            document.getElementById('input-kp').value = pesakit.kp || '';
+            document.getElementById('input-telefon').value = pesakit.telefon || '';
+            document.getElementById('input-alamat').value = pesakit.alamat || '';
+            document.getElementById('input-tarikh-gigit').value = pesakit.tarikhGigitan || '';
+            document.getElementById('input-kategori').value = pesakit.kategoriLuka || '';
+            document.getElementById('input-klinik').value = pesakit.klinikRujukan || '';
+            document.getElementById('input-tarikh-rujuk').value = pesakit.tarikhRujukan || '';
+
+            document.getElementById('input-tarikh-gigit').disabled = false;
+            document.getElementById('input-kategori').disabled = false;
+            document.getElementById('input-klinik').disabled = false;
+            document.getElementById('input-tarikh-rujuk').disabled = false;
+
+            document.getElementById('modal-tambah').classList.remove('hidden');
+        }
+
+        // Sahkan kehadiran pesakit (Sekali sahaja) terus ke awan
+        async function sahkanHadir(id) {
+            const pesakit = pesakitData.find(p => p.id === id);
+            if(pesakit && !pesakit.hadir) {
+                try {
+                    // Dapatkan tarikh dan masa semasa
+                    const sekarang = new Date();
+                    const tarikhMasaLokal = sekarang.toLocaleDateString('en-GB', {
+                        day: '2-digit', month: '2-digit', year: 'numeric'
+                    }) + ', ' + sekarang.toLocaleTimeString('en-US', {
+                        hour: '2-digit', minute: '2-digit', hour12: true
+                    });
+
+                    const docRujukan = doc(db, 'artifacts', appId, 'public', 'data', 'pesakit', id);
+                    await updateDoc(docRujukan, { 
+                        hadir: true,
+                        waktuKehadiran: tarikhMasaLokal
+                    });
+                    
+                    // Selaras maklumat kehadiran ke Google Sheets
+                    pesakit.hadir = true;
+                    pesakit.waktuKehadiran = tarikhMasaLokal;
+                    syncKeGoogleSheets("HADIR", pesakit);
+                    
+                    tunjukNotifikasi("Kehadiran pesakit disahkan!", "fas fa-check-circle", "bg-emerald-500");
+                } catch (err) {
+                    console.error("Gagal sahkan kehadiran:", err);
+                }
+            }
+        }
+
+        function bukaModalPadam(id) {
+            idUntukDipadam = id;
+            document.getElementById('modal-padam').classList.remove('hidden');
+        }
+
+        function tutupModalPadam() {
+            idUntukDipadam = null;
+            document.getElementById('modal-padam').classList.add('hidden');
+        }
+
+        async function sahkanPadam() {
+            if (idUntukDipadam) {
+                try {
+                    const docRujukan = doc(db, 'artifacts', appId, 'public', 'data', 'pesakit', idUntukDipadam);
+                    await deleteDoc(docRujukan);
+                    
+                    // Arahkan Google Sheets untuk padam barisan ini
+                    syncKeGoogleSheets("PADAM", { id: idUntukDipadam });
+                    
+                    tunjukNotifikasi("Rekod berjaya dipadam!", "fas fa-trash-alt", "bg-gray-800");
+                } catch (err) {
+                    console.error("Gagal padam:", err);
+                } finally {
+                    tutupModalPadam();
+                }
+            }
+        }
+
+        // Fungsi Notifikasi UI
+        function tunjukNotifikasi(mesej, ikon, warnaLatar) {
+            const notif = document.createElement('div');
+            notif.className = `fixed top-5 right-5 ${warnaLatar} text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in-down flex items-center`;
+            notif.innerHTML = `<i class="${ikon} mr-2"></i> ${mesej}`;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+
+        // Mulakan sistem
+        document.addEventListener('DOMContentLoaded', () => {
+            laksanaTukarPeranan('klinik'); 
+            initAuth(); // Mula proses kebenaran Firebase LIVE
+        });
+    </script>
+</body>
+</html>
